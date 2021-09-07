@@ -1,0 +1,33 @@
+[package]
+name = "dfnhack7"
+version = "0.1.0"
+authors = ["John Plevyak <jplevyak@gmail.com>"]
+edition = "2018"
+
+[profile.release]
+lto = true
+opt-level = 'z'
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+base64 = "0.13"
+candid = "0.6.21"
+fuzzy-matcher = "0.3.7"
+dfnhack7_common = { path = "../common" }
+ic-cdk = "0.3.0"
+ic-cdk-macros = "0.3.0"
+ic-types = "0.1.2"
+ic-certified-map = "0.1.0"
+libflate = "1"
+num-traits = "0.2.14"
+serde = "1"
+serde_bytes = "0.11"
+serde_cbor = "0.11"
+serde_with = "1.6.2"
+sha2 = "0.9.1"
+
+[build-dependencies]
+sha2 = "0.9.1"
