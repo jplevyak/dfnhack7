@@ -1,0 +1,7 @@
+
+[workspace]
+members = ["src/ic", "src/common", "src/host", "src/tls"]
+
+[profile.release]
+lto = true
+opt-level = 'z'
