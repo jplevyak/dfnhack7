@@ -2,7 +2,7 @@ import { Actor, HttpAgent } from "@dfinity/agent";
 import {
   idlFactory as dfnhack7_idl,
   canisterId as ic_id,
-} from "dfx-generated/dfnhack7";
+} from "../../declarations/ic";
 
 const agent = new HttpAgent();
 const dfnhack7 = Actor.createActor(dfnhack7_idl, { agent, canisterId: ic_id });
