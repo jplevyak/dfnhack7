@@ -865,7 +865,7 @@ fn set_root_hash(tree: &AssetHashes) {
     set_certified_data(&full_tree_hash);
 }
 
-fn witness_to_header<'a>(witness: HashTree<'a>) -> HeaderField {
+fn witness_to_header(witness: HashTree) -> HeaderField {
     use ic_certified_map::labeled;
 
     let hash_tree = labeled(b"http_assets", witness);

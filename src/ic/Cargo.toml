@@ -4,9 +4,6 @@ version = "0.1.0"
 authors = ["John Plevyak <jplevyak@gmail.com>"]
 edition = "2018"
 
-[profile.release]
-lto = true
-opt-level = 'z'
 
 [lib]
 path = "src/lib.rs"
