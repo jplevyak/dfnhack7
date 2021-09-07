@@ -1,0 +1,11 @@
+[package]
+name = "tls"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+k256 = { version = "0.9.6", features = ["ecdh"], default-features = false }
+rand_core_6 = { package = "rand_core", version = "0.6.3" }
+sha2 = "*"
+hmac = "*"
+aes-gcm = "*"
