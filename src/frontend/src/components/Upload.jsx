@@ -58,7 +58,7 @@ export const Upload = ({ principal }) => {
           break;
         case "hash":
           {
-            const result = await actor.notarize_hash(hash, note, isPrivate);
+            const result = await actor.notarize_hash(hash, note);
 
             if (result.length === 0) {
               setError("This hash was already added");
