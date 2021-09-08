@@ -9,7 +9,7 @@
 1. cd into the newly cloned internet-identity folder
 1. run `npm install`
 1. run `II_ENV=development dfx deploy --no-wallet --argument '(null)'`
-1. note the UI canister ID (eg. rkp4c-7iaaa-aaaaa-aaaca-cai)
+1. note the `internet_identity` canister ID (eg. rkp4c-7iaaa-aaaaa-aaaca-cai)
 
 ### Install the hackathon project
 
