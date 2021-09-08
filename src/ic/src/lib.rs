@@ -52,8 +52,8 @@ fn sha256(data: &ByteBuf) -> Hash {
 }
 
 #[update]
-fn notarize(data: ByteBuf, description: String) -> Option<RecordResult> {
-    let hash = sha256(&data);
+fn notarize(datum: Datum, description: String) -> Option<RecordResult> {
+    let hash = sha256(&datum.content);
 
     STATE.with(move |s| {
         match s.data.borrow_mut().entry(hash.clone()) {
@@ -62,8 +62,8 @@ fn notarize(data: ByteBuf, description: String) -> Option<RecordResult> {
                 let now = time() as u64;
                 let record = Record {
                     hash: hash,
-                    owner: Some(caller()),
-                    datum: Some(data),
+                    owner: caller(),
+                    datum: datum,
                     description: description,
                     created: now
                 };
@@ -76,9 +76,9 @@ fn notarize(data: ByteBuf, description: String) -> Option<RecordResult> {
 }
 
 #[query]
-fn get_datum(hash: Hash) -> Option<RecordResult> {
+fn get_datum(hash: Hash) -> Option<Datum> {
     STATE.with(|s| match s.data.borrow().get(&hash) {
-        Some(r) => Some(to_result(&r)),
+        Some(r) => Some(r.datum.clone()),
         None => None,
     })
 }
