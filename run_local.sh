@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
 dfx start --background
-git submodule add https://github.com/dfinity/internet-identity
+git submodule update --init --recursive
 cd internet-identity
 npm install
 II_ENV=development dfx deploy --no-wallet --argument '(null)'
 II_CANISTER_ID=$(dfx canister --no-wallet id internet_identity)
 cd ..
 # TODO: echo the identity into local_canisters.json
-cat <<EOF >> local_canisters.json
+cat <<EOF >| local_canisters.json
    {
     "II_LOCAL_UI_CANISTER_ID": "$II_CANISTER_ID"
    }
