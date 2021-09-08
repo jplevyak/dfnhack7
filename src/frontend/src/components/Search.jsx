@@ -11,7 +11,10 @@ export const Search = ({ onSubmit }) => {
   const search = async (term) => {
     let results = await actor.search(term);
     setResults(results);
-    console.log(results);
+  };
+
+  const makePublic = async (result) => {
+    // console.log(result);
   };
 
   return (
@@ -38,7 +41,11 @@ export const Search = ({ onSubmit }) => {
               {results.length} result(s)
             </Block>
             {results.map((result, index) => (
-              <SearchResult result={result} key={index}></SearchResult>
+              <SearchResult
+                result={result}
+                key={index}
+                makePublic={makePublic}
+              ></SearchResult>
             ))}
           </>
         )}

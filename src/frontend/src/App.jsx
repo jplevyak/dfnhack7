@@ -14,6 +14,7 @@ import {
   Block,
 } from "react-bulma-components";
 import { LoginNotice } from "./components/LoginNotice";
+// import Logo from "../assets/logo.png";
 
 const App = () => {
   const [loggedIn, setLoggedIn] = useState(null);
@@ -61,9 +62,10 @@ const App = () => {
             ml="0"
             style={{
               fontWeight: "bold",
+              alignItems: "center",
             }}
           >
-            The Internet Computer Notary
+            <img src={"/assets/logo.svg"} width="40" height="40" /> IC Notary
           </Navbar.Brand>
           <Navbar.Menu mr="0">
             <Navbar.Container></Navbar.Container>

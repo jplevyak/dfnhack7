@@ -8,10 +8,10 @@ const FieldLabel = ({ children }) => {
   );
 };
 
-export const SearchResult = ({ result }) => {
-  let url ="https://" + canisterId + ".ic0.app"; 
+export const SearchResult = ({ result, makePublic }) => {
+  let url = "https://" + canisterId + ".ic0.app";
   if (process.env.NODE_ENV !== "production") {
-    url = "http://" + canisterId + ".localhost:8000"
+    url = "http://" + canisterId + ".localhost:8000";
   }
   url += "/" + result.hash;
   return (
@@ -33,7 +33,9 @@ export const SearchResult = ({ result }) => {
           </div>
           <div>
             <FieldLabel>Content: </FieldLabel>
-            <a href={url}>{result.hash}</a>
+            <a href={url} target="_blank">
+              {result.hash}
+            </a>
           </div>
           <div>
             <FieldLabel>Added by: </FieldLabel>
@@ -41,12 +43,8 @@ export const SearchResult = ({ result }) => {
           </div>
         </div>
       </div>
-      <Button outlined={false}>
-        <img
-          width="24"
-          height="24"
-          src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgZGF0YS1uYW1lPSJMYXllciAxIiBpZD0iTGF5ZXJfMSIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHRpdGxlLz48cGF0aCBkPSJNMjUuOTQsNTIuN2EyLDIsMCwwLDEsMi43Ny0uNThMNDgsNjQuNzJWMjBhMiwyLDAsMCwxLDQsMFY2NC43MmwxOS4yOS0xMi42YTIsMiwwLDAsMSwyLjE5LDMuMzVMNTEuMDksNzAuMDhsMCwwYTEuODYsMS44NiwwLDAsMS0uNDMuMmwtLjEyLDBhMS44OSwxLjg5LDAsMCwxLTEsMGwtLjEyLDBhMS44NiwxLjg2LDAsMCwxLS40My0uMmwwLDBMMjYuNTIsNTUuNDdBMiwyLDAsMCwxLDI1Ljk0LDUyLjdaTTc2LjQ4LDc4aC01M2EyLDIsMCwxLDAsMCw0aDUzYTIsMiwwLDEsMCwwLTRaIi8+PC9zdmc+"
-        ></img>
+      <Button style={{ border: "none" }} onClick={() => makePublic(result)}>
+        <img width="24" height="24" src="/assets/private.svg"></img>
       </Button>
     </Block>
   );
