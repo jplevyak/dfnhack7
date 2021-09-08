@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
+const { II_LOCAL_UI_CANISTER_ID } = require("./local_canisters.json");
 
 let localCanisters, prodCanisters, canisters;
 
@@ -44,7 +45,7 @@ module.exports = {
   entry: {
     // The frontend.entrypoint points to the HTML file for this build, so we need
     // to replace the extension to `.js`.
-    index: path.join(__dirname, asset_entry).replace(/\.html$/, ".js"),
+    index: path.join(__dirname, asset_entry).replace(/\.html$/, ".jsx"),
   },
   devtool: isDevelopment ? "source-map" : false,
   optimization: {
@@ -93,6 +94,7 @@ module.exports = {
     new webpack.EnvironmentPlugin({
       NODE_ENV: "development",
       IC_CANISTER_ID: canisters["ic"],
+      II_LOCAL_URL: `http://${II_LOCAL_UI_CANISTER_ID}.localhost:8000/#authorize`,
     }),
     new webpack.ProvidePlugin({
       Buffer: [require.resolve("buffer/"), "Buffer"],
