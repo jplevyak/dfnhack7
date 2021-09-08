@@ -13,4 +13,4 @@ Prerequisites:
 - npm >= 7
 - git
 
-From this directory, run `./run_local.sh`
+From this directory, run `./run_local.sh` and point your browser to http://localhost:3000
