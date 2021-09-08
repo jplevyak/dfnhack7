@@ -1,7 +1,16 @@
 import React, { useState } from "react";
+import { useActor } from "./ActorProvider";
+import { SearchResult, SearchResults } from "./SearchResults";
 
 export const Search = ({ onSubmit }) => {
   const [term, setTerm] = useState("");
+  const [results, setResults] = useState(null);
+  const { actor } = useActor();
+
+  const search = async (term) => {
+    let results = await actor.search(term);
+    setResults(results);
+  };
 
   return (
     <div>
@@ -10,7 +19,15 @@ export const Search = ({ onSubmit }) => {
         value={term}
         onChange={(e) => setTerm(e.target.value)}
       ></input>
-      <button onClick={() => onSubmit}>Search</button>
+      <button onClick={() => search(term)}>Search</button>
+
+      {results && results.length > 0 && (
+        <SearchResults>
+          {results.map((result, index) => (
+            <SearchResult result={result} key={index}></SearchResult>
+          ))}
+        </SearchResults>
+      )}
     </div>
   );
 };
