@@ -3,7 +3,7 @@ import { useActor } from "./ActorProvider";
 
 export const Upload = ({}) => {
   const [file, setFile] = useState(null);
-  const [note, setNote] = useState(null);
+  const [note, setNote] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);

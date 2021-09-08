@@ -10,10 +10,6 @@ use sha2::Digest;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-/// The amount of time a batch is kept alive. Modifying the batch
-/// delays the expiry further.
-const BATCH_EXPIRY_NANOS: u64 = 300_000_000_000;
-
 /// The order in which we pick encodings for certification.
 const ENCODING_CERTIFICATION_ORDER: &[&str] = &["identity", "gzip", "compress", "deflate", "br"];
 
@@ -30,10 +26,6 @@ type AssetHashes = RbTree<Key, Hash>;
 #[derive(Default)]
 struct State {
     assets: RefCell<HashMap<Key, Asset>>,
-
-    chunks: RefCell<HashMap<ChunkId, Chunk>>,
-    next_chunk_id: RefCell<ChunkId>,
-
     authorized: RefCell<Vec<Principal>>,
 }
 
@@ -81,86 +73,9 @@ struct AssetEncodingDetails {
     sha256: Option<ByteBuf>,
     length: Nat,
 }
-
-struct Chunk {
-    batch_id: BatchId,
-    content: RcBytes,
-}
-
-struct Batch {
-    expires_at: Timestamp,
-}
-
 type Timestamp = u64;
-type BatchId = Nat;
-type ChunkId = Nat;
-type Key = String;
+pub type Key = String;
 
-// IDL Types
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct CreateAssetArguments {
-    key: Key,
-    content_type: String,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct SetAssetContentArguments {
-    key: Key,
-    content_encoding: String,
-    chunk_ids: Vec<ChunkId>,
-    sha256: Option<ByteBuf>,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct UnsetAssetContentArguments {
-    key: Key,
-    content_encoding: String,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct StoreArg {
-    key: Key,
-    content_type: String,
-    content_encoding: String,
-    content: ByteBuf,
-    sha256: Option<ByteBuf>,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct GetArg {
-    key: Key,
-    accept_encodings: Vec<String>,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct GetChunkArg {
-    key: Key,
-    content_encoding: String,
-    index: Nat,
-    sha256: Option<ByteBuf>,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct GetChunkResponse {
-    content: RcBytes,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct CreateBatchResponse {
-    batch_id: BatchId,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct CreateChunkArg {
-    batch_id: BatchId,
-    content: ByteBuf,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct CreateChunkResponse {
-    chunk_id: ChunkId,
-}
 // HTTP interface
 
 type HeaderField = (String, String);
@@ -212,8 +127,7 @@ fn authorize(other: Principal) {
     })
 }
 
-#[query]
-fn retrieve(key: Key) -> RcBytes {
+pub fn do_get(key: Key) -> RcBytes {
     STATE.with(|s| {
         let assets = s.assets.borrow();
         let asset = assets.get(&key).unwrap_or_else(|| trap("asset not found"));
@@ -228,80 +142,20 @@ fn retrieve(key: Key) -> RcBytes {
     })
 }
 
-#[update(guard = "is_authorized")]
-fn store(arg: StoreArg) {
+pub fn do_put(key: Key, hash: Hash, content_type: String, content: ByteBuf) {
+    let content_encoding = "identity".to_string();
     STATE.with(move |s| {
         let mut assets = s.assets.borrow_mut();
-        let asset = assets.entry(arg.key.clone()).or_default();
-        asset.content_type = arg.content_type;
-
-        let hash = hash_bytes(&arg.content);
-        if let Some(provided_hash) = arg.sha256 {
-            if &hash != provided_hash.as_ref() {
-                trap("sha256 mismatch");
-            }
-        }
-
-        let encoding = asset.encodings.entry(arg.content_encoding).or_default();
-        encoding.total_length = arg.content.len();
-        encoding.content_chunks = vec![RcBytes::from(arg.content)];
+        let asset = assets.entry(key.clone()).or_default();
+        asset.content_type = content_type;
+        let encoding = asset.encodings.entry(content_encoding).or_default();
+        encoding.total_length = content.len();
+        encoding.content_chunks = vec![RcBytes::from(content)];
         encoding.modified = time() as u64;
         encoding.sha256 = hash;
 
-        on_asset_change(&arg.key, asset);
+        on_asset_change(&key, asset);
     });
-}
-
-#[query]
-fn get(arg: GetArg) -> EncodedAsset {
-    STATE.with(|s| {
-        let assets = s.assets.borrow();
-        let asset = assets.get(&arg.key).unwrap_or_else(|| {
-            trap("asset not found");
-        });
-
-        for enc in arg.accept_encodings.iter() {
-            if let Some(asset_enc) = asset.encodings.get(enc) {
-                return EncodedAsset {
-                    content: asset_enc.content_chunks[0].clone(),
-                    content_type: asset.content_type.clone(),
-                    content_encoding: enc.clone(),
-                    total_length: Nat::from(asset_enc.total_length as u64),
-                    sha256: Some(ByteBuf::from(asset_enc.sha256)),
-                };
-            }
-        }
-        trap("no such encoding");
-    })
-}
-
-#[query]
-fn get_chunk(arg: GetChunkArg) -> GetChunkResponse {
-    STATE.with(|s| {
-        let assets = s.assets.borrow();
-        let asset = assets
-            .get(&arg.key)
-            .unwrap_or_else(|| trap("asset not found"));
-
-        let enc = asset
-            .encodings
-            .get(&arg.content_encoding)
-            .unwrap_or_else(|| trap("no such encoding"));
-
-        if let Some(expected_hash) = arg.sha256 {
-            if expected_hash != enc.sha256 {
-                trap("sha256 mismatch")
-            }
-        }
-        if arg.index >= enc.content_chunks.len() {
-            trap("chunk index out of bounds");
-        }
-        let index: usize = arg.index.0.to_usize().unwrap();
-
-        GetChunkResponse {
-            content: enc.content_chunks[index].clone(),
-        }
-    })
 }
 
 fn create_token(
@@ -550,83 +404,7 @@ fn http_request_streaming_callback(
     })
 }
 
-fn do_create_asset(arg: CreateAssetArguments) {
-    STATE.with(|s| {
-        let mut assets = s.assets.borrow_mut();
-        if let Some(asset) = assets.get(&arg.key) {
-            if asset.content_type != arg.content_type {
-                trap("create_asset: content type mismatch");
-            }
-        } else {
-            assets.insert(
-                arg.key,
-                Asset {
-                    content_type: arg.content_type,
-                    encodings: HashMap::new(),
-                },
-            );
-        }
-    })
-}
-
-fn do_set_asset_content(arg: SetAssetContentArguments) {
-    STATE.with(|s| {
-        if arg.chunk_ids.is_empty() {
-            trap("encoding must have at least one chunk");
-        }
-
-        let mut assets = s.assets.borrow_mut();
-        let asset = assets
-            .get_mut(&arg.key)
-            .unwrap_or_else(|| trap("asset not found"));
-        let now = time() as u64;
-
-        let mut chunks = s.chunks.borrow_mut();
-
-        let mut content_chunks = vec![];
-        let mut hasher = sha2::Sha256::new();
-        for chunk_id in arg.chunk_ids.iter() {
-            let chunk = chunks.remove(chunk_id).expect("chunk not found");
-            hasher.update(&*chunk.content);
-            content_chunks.push(chunk.content);
-        }
-
-        let sha256 = hasher.finalize().into();
-
-        if let Some(expected_hash) = arg.sha256 {
-            if expected_hash != sha256 {
-                trap("sha256 mismatch");
-            }
-        }
-
-        let total_length: usize = content_chunks.iter().map(|c| c.len()).sum();
-        let enc = AssetEncoding {
-            modified: now,
-            content_chunks,
-            certified: false,
-            total_length,
-            sha256,
-        };
-        asset.encodings.insert(arg.content_encoding, enc);
-
-        on_asset_change(&arg.key, asset);
-    })
-}
-
-fn do_unset_asset_content(arg: UnsetAssetContentArguments) {
-    STATE.with(|s| {
-        let mut assets = s.assets.borrow_mut();
-        let asset = assets
-            .get_mut(&arg.key)
-            .unwrap_or_else(|| trap("asset not found"));
-
-        if asset.encodings.remove(&arg.content_encoding).is_some() {
-            on_asset_change(&arg.key, asset);
-        }
-    })
-}
-
-fn do_delete_asset(key: &str) {
+pub fn do_delete(key: &str) {
     STATE.with(|s| {
         let mut assets = s.assets.borrow_mut();
         assets.remove(key);
@@ -637,8 +415,6 @@ fn do_delete_asset(key: &str) {
 pub fn do_clear() {
     STATE.with(|s| {
         s.assets.borrow_mut().clear();
-        s.chunks.borrow_mut().clear();
-        *s.next_chunk_id.borrow_mut() = Nat::from(1);
     })
 }
 
@@ -769,7 +545,7 @@ fn merge_hash_trees<'a>(lhs: HashTree<'a>, rhs: HashTree<'a>) -> HashTree<'a> {
     }
 }
 
-fn hash_bytes(bytes: &[u8]) -> Hash {
+pub fn hash_bytes(bytes: &[u8]) -> Hash {
     let mut hash = sha2::Sha256::new();
     hash.update(bytes);
     hash.finalize().into()

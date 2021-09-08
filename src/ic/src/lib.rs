@@ -7,13 +7,11 @@ use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
 use ic_cdk::api::{caller, time};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
-use serde_bytes::ByteBuf;
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
-use sha2::{Digest, Sha256};
 
 thread_local! {
     static STATE: State = State::default();
@@ -21,7 +19,6 @@ thread_local! {
 
 const MAX_DESCRIPTION_LENGTH: usize = 200;
 const MAX_SEARCH_RESULTS: usize = 20;
-
 
 #[derive(Default)]
 struct State {
@@ -44,33 +41,30 @@ fn to_result(r: &Record) -> RecordResult {
     }
 }
 
-fn sha256(data: &ByteBuf) -> Hash {
-    let mut h = Sha256::default();
-    h.update(&data);
-    let result = h.finalize();
-    format!("{:x}", result)
-}
-
 #[update]
 fn notarize(datum: Datum, description: String) -> Option<RecordResult> {
-    let hash = sha256(&datum.content);
-
-    STATE.with(move |s| {
-        match s.data.borrow_mut().entry(hash.clone()) {
-            Entry::Occupied(_e) => None,
-            Entry::Vacant(e) => {
-                let now = time() as u64;
-                let record = Record {
-                    hash: hash,
-                    owner: caller(),
-                    datum: datum,
-                    description: description,
-                    created: now
-                };
-                let result = to_result(&record);
-                e.insert(record);
-                Some(result)
-            }
+    let hash = crate::assets::hash_bytes(&datum.content);
+    let key = hex::encode(hash);
+    STATE.with(move |s| match s.data.borrow_mut().entry(key.clone()) {
+        Entry::Occupied(_e) => None,
+        Entry::Vacant(e) => {
+            let now = time() as u64;
+            crate::assets::do_put(
+                "/".to_owned() + &key,
+                hash,
+                datum.content_type.clone(),
+                datum.content.clone(),
+            );
+            let record = Record {
+                hash: key,
+                owner: caller(),
+                datum: datum,
+                description: description,
+                created: now,
+            };
+            let result = to_result(&record);
+            e.insert(record);
+            Some(result)
         }
     })
 }

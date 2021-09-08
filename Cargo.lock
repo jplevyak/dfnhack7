@@ -419,6 +419,7 @@ dependencies = [
  "candid",
  "dfnhack7_common",
  "fuzzy-matcher",
+ "hex",
  "ic-cdk 0.3.0",
  "ic-cdk-macros 0.3.0",
  "ic-certified-map",

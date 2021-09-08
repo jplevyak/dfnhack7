@@ -14,7 +14,7 @@ export const Search = ({ onSubmit }) => {
 
   return (
     <div>
-      <input
+      Description keywords or sha256 hash: <input
         placeholder="Search Terms..."
         value={term}
         onChange={(e) => setTerm(e.target.value)}

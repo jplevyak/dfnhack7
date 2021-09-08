@@ -8,7 +8,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
-pub(crate) struct RcBytes(Rc<ByteBuf>);
+pub struct RcBytes(Rc<ByteBuf>);
 
 impl CandidType for RcBytes {
     fn _ty() -> Type {

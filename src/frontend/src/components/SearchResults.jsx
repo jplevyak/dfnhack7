@@ -1,9 +1,14 @@
 import React from "react";
+import { canisterId } from "../../../declarations/ic";
 
 export const SearchResult = ({ result }) => {
+  let url ="https://" + canisterId + ".ic0.app"; 
+  if (process.env.NODE_ENV !== "production") {
+    url = "http://" + canisterId + ".localhost:8000"
+  }
+  url += "/" + result.hash;
   return (
-    <li>
-      {result.hash} : {result.description}
+    <li> <a href={url}>{result.hash}</a> by {result.owner.toString()} on {(new Date(Number(result.created / 1000n))).toString()} : {result.description}
     </li>
   );
 };
