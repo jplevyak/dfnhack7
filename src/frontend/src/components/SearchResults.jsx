@@ -82,7 +82,7 @@ export const SearchResult = ({
         </Button>
       )}
       {result.hidden && result.owner.toString() !== principalId && (
-        <Block>
+        <Block style={{ padding: "7px 16px" }}>
           <img width="24" height="24" src="/assets/private.png"></img>
         </Block>
       )}

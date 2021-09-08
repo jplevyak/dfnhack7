@@ -184,7 +184,7 @@ export const Upload = ({ principal }) => {
                   <Form.Checkbox
                     onChange={(e) => setIsPrivate(e.target.checked)}
                     checked={isPrivate}
-                    disabled={uploading}
+                    disabled={uploading || uploadType == "hash"}
                   >
                     Private file (only the owner can download it)
                   </Form.Checkbox>
