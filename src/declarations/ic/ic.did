@@ -59,7 +59,7 @@ service: {
   http_request_stream_callback: (token: opt Token) -> (StreamingCallbackHttpResponse) query;
 
   // STUBS: below this line the methods have stubs.
-  notarize: (principal, blob) -> (opt RecordResult);
+  notarize: (principal, blob, text) -> (opt RecordResult);
 
   // DONE: below this line the methods have been implemented/revised.
   authorize: (principal) -> ();
