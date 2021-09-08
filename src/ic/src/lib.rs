@@ -36,19 +36,22 @@ fn to_result(r: &Record) -> RecordResult {
     RecordResult {
         hash: r.hash.clone(),
         owner: r.owner.clone(),
+        has_datum: r.datum.is_some(),
         description: r.description.clone(),
+        hidden: r.hidden,
         created: r.created,
     }
 }
 
 #[update]
-fn notarize(datum: Datum, description: String) -> Option<RecordResult> {
+fn notarize(datum: Datum, description: String, hidden: bool) -> Option<RecordResult> {
+    assert!(description.len() <= MAX_DESCRIPTION_LENGTH);
     let hash = crate::assets::hash_bytes(&datum.content);
     let key = hex::encode(hash);
     STATE.with(move |s| match s.data.borrow_mut().entry(key.clone()) {
         Entry::Occupied(_e) => None,
         Entry::Vacant(e) => {
-            let now = time() as u64;
+            let created = time() as u64;
             crate::assets::do_put(
                 "/".to_owned() + &key,
                 hash,
@@ -58,9 +61,10 @@ fn notarize(datum: Datum, description: String) -> Option<RecordResult> {
             let record = Record {
                 hash: key,
                 owner: caller(),
-                datum: datum,
+                datum: Some(datum),
                 description: description,
-                created: now,
+                hidden,
+                created,
             };
             let result = to_result(&record);
             e.insert(record);
@@ -69,10 +73,51 @@ fn notarize(datum: Datum, description: String) -> Option<RecordResult> {
     })
 }
 
+#[update]
+fn notarize_hash(hex_sha256: String, description: String, hidden: bool) -> Option<RecordResult> {
+    assert!(description.len() <= MAX_DESCRIPTION_LENGTH);
+    let _hash = hex::decode(hex_sha256.clone()).unwrap();
+    assert!(_hash.len() == 32);
+    STATE.with(
+        move |s| match s.data.borrow_mut().entry(hex_sha256.clone()) {
+            Entry::Occupied(_e) => None,
+            Entry::Vacant(e) => {
+                let created = time() as u64;
+                let record = Record {
+                    hash: hex_sha256,
+                    owner: caller(),
+                    datum: None,
+                    description: description,
+                    hidden,
+                    created,
+                };
+                let result = to_result(&record);
+                e.insert(record);
+                Some(result)
+            }
+        },
+    )
+}
+
+#[update]
+fn reveal(hex_sha256: String) -> Option<RecordResult> {
+    STATE.with(
+        move |s| match s.data.borrow_mut().entry(hex_sha256.clone()) {
+            Entry::Occupied(mut e) => {
+                if caller() == e.get().owner {
+                    e.get_mut().hidden = false;
+                }
+                Some(to_result(e.get()))
+            }
+            Entry::Vacant(_e) => None,
+        },
+    )
+}
+
 #[query]
 fn get_datum(hash: Hash) -> Option<Datum> {
     STATE.with(|s| match s.data.borrow().get(&hash) {
-        Some(r) => Some(r.datum.clone()),
+        Some(r) => r.datum.clone(),
         None => None,
     })
 }

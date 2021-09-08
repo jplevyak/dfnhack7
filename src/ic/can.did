@@ -35,7 +35,9 @@ type StreamingStrategy = variant {
 type RecordResult = record {
   hash: text;
   owner: principal;
+  has_datum: bool;
   description: text;
+  hidden: bool;
   created: nat64;
 };
 
@@ -44,32 +46,15 @@ type Datum = record {
   content: blob;
 };
 
-type Record = record {
-  link: text;
-  owner: opt principal;
-  datum: Datum;
-  description: text;
-  created: nat64;
-};
-
-type UpdatedRecordResult = record {
-  link: text;
-  canister_id: opt text;
-};
-
 service: {
-
-  // UNKNOWN: Needs to be updated/test.
   http_request: (request: HttpRequest) -> (HttpResponse) query;
   http_request_stream_callback: (token: opt Token) -> (StreamingCallbackHttpResponse) query;
-
-  // STUBS: below this line the methods have stubs.
-  notarize: (datum: Datum, description: text) -> (opt RecordResult);
-
-  // DONE: below this line the methods have been implemented/revised.
+  notarize: (datum: Datum, description: text, hidden: bool) -> (opt RecordResult);
+  notarize_hash: (hex_sha256: text, description: text, hidden: bool) -> (opt RecordResult);
+  reveal: (hex_sha256: text) -> (opt RecordResult);
+  search: (text) -> (vec RecordResult) query;
   authorize: (principal) -> ();
   clear: () -> ();
   get_datum: (text) -> (opt Datum) query;
   get_data: () -> (vec RecordResult) query;
-  search: (text) -> (vec RecordResult) query;
 }

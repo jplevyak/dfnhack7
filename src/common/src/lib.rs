@@ -6,8 +6,9 @@ use std::cmp::Eq;
 pub struct Record {
     pub hash: Hash,
     pub owner: Principal,
-    pub datum: Datum,
+    pub datum: Option<Datum>,
     pub description: String,
+    pub hidden: bool,
     pub created: Timestamp,
 }
 
@@ -25,6 +26,8 @@ pub type SearchTerms = String;
 pub struct RecordResult {
     pub hash: Hash,
     pub owner: Principal,
+    pub has_datum: bool,
     pub description: String,
+    pub hidden: bool,
     pub created: Timestamp,
 }

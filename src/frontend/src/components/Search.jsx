@@ -25,7 +25,7 @@ export const Search = ({ onSubmit }) => {
             <Form.Input
               placeholder="Search in description, hash, principals..."
               value={term}
-              onChange={(e) => setTerm(e.target.value)}
+              onChange={(e) => { setTerm(e.target.value); search(e.target.value); }}
             />
           </Form.Control>
           <Form.Control>

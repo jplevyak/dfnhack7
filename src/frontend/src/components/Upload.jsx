@@ -86,7 +86,7 @@ export const Upload = ({ principal }) => {
 
   return (
     <Box style={{ width: 700, margin: "auto" }} mt="6">
-      <Heading size="4">Upload a file to notarize</Heading>
+      <Heading size="4">Notarize a file</Heading>
       <Block p="1" textColor="gray" style={{ fontSize: 12 }}>
         Your principal ID: {principal}
       </Block>
@@ -104,7 +104,7 @@ export const Upload = ({ principal }) => {
                 active={uploadType === "hash"}
                 onClick={() => !uploading && setUploadType("hash")}
               >
-                By custom hash
+                By content hash
               </Menu.List.Item>
               <Menu.List.Item
                 active={uploadType === "http"}
