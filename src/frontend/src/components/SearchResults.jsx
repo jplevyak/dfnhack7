@@ -36,9 +36,6 @@ export const SearchResult = ({ result }) => {
         </div>
       </div>
       <Button outlined={false}>
-        {/* <Icon>
-          <i class="fas fa-file-download"></i>
-        </Icon> */}
         <img
           width="24"
           height="24"

@@ -98,7 +98,7 @@ export const Upload = ({ principal }) => {
             </Form.Field>
             <Form.Field>
               <Form.Control>
-                <Button disabled={uploading} color="primary">
+                <Button disabled={uploading} color="primary" outlined={true}>
                   {uploading ? "Uploading..." : "Upload & Notarize"}
                 </Button>
               </Form.Control>

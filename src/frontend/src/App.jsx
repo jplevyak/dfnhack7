@@ -5,7 +5,14 @@ import { Search } from "./components/Search";
 import { Upload } from "./components/Upload";
 import { useActor } from "./components/ActorProvider";
 import "bulma/css/bulma.min.css";
-import { Button, Heading, Container, Navbar } from "react-bulma-components";
+import {
+  Button,
+  Heading,
+  Container,
+  Navbar,
+  Footer,
+  Block,
+} from "react-bulma-components";
 import { LoginNotice } from "./components/LoginNotice";
 
 const App = () => {
@@ -91,6 +98,7 @@ const App = () => {
           ></Upload>
         )}
       </Container>
+      <Block textAlign="center">By team 7</Block>
     </>
   );
 };
