@@ -1,4 +1,4 @@
-#!/user/bin/env bash
+#!/usr/bin/env bash
 
 dfx start --background
 git submodule add https://github.com/dfinity/internet-identity
