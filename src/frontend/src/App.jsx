@@ -4,6 +4,16 @@ import { AuthClient } from "@dfinity/auth-client";
 import { Search } from "./components/Search";
 import { Upload } from "./components/Upload";
 import { useActor } from "./components/ActorProvider";
+import "bulma/css/bulma.min.css";
+import {
+  Button,
+  Heading,
+  Container,
+  Navbar,
+  Footer,
+  Block,
+} from "react-bulma-components";
+import { LoginNotice } from "./components/LoginNotice";
 
 const App = () => {
   const [loggedIn, setLoggedIn] = useState(null);
@@ -34,46 +44,62 @@ const App = () => {
 
   function handleAuth() {
     setLoggedIn(true);
-    if (!actor) {
-      setActor(
-        createActor(canisterId, {
-          agentOptions: {
-            identity: authClientRef.current.getIdentity(),
-          },
-        })
-      );
-    }
+    setActor(
+      createActor(canisterId, {
+        agentOptions: {
+          identity: authClientRef.current.getIdentity(),
+        },
+      })
+    );
   }
 
   return (
-    <div>
-      <h1>Notarized Data on the Internet Computer</h1>
-      {loggedIn && (
-        <p>
-          Your principal:{" "}
-          {authClientRef.current.getIdentity().getPrincipal().toString()}
-        </p>
-      )}
-      <Search></Search>
-      {loggedIn ? (
-        <>
-          <Upload></Upload>
-          <button
-            onClick={() => {
-              authClientRef.current.logout();
-              setLoggedIn(false);
+    <>
+      <Navbar py="4">
+        <Container>
+          <Navbar.Brand
+            ml="0"
+            style={{
+              fontWeight: "bold",
             }}
           >
-            Log out
-          </button>
-        </>
-      ) : (
-        <>
-          <p>To notarize documents log in with II</p>
-          <button onClick={onLogin}>Log in with Internet Identity</button>
-        </>
-      )}
-    </div>
+            The Internet Computer Notary
+          </Navbar.Brand>
+          <Navbar.Menu mr="0">
+            <Navbar.Container></Navbar.Container>
+            {loggedIn && (
+              <Navbar.Container align="end">
+                <Button
+                  onClick={() => {
+                    authClientRef.current.logout();
+                    setLoggedIn(false);
+                  }}
+                >
+                  Log out
+                </Button>
+              </Navbar.Container>
+            )}
+          </Navbar.Menu>
+        </Container>
+      </Navbar>
+      <Container mb="6">
+        <Heading textAlign="center">
+          Notarized Data on the Internet Computer
+        </Heading>
+        {!loggedIn && <LoginNotice onLogin={onLogin} />}
+        <Search></Search>
+
+        {loggedIn && (
+          <Upload
+            principal={authClientRef.current
+              .getIdentity()
+              .getPrincipal()
+              .toString()}
+          ></Upload>
+        )}
+      </Container>
+      <Block textAlign="center">By team 7</Block>
+    </>
   );
 };
 
