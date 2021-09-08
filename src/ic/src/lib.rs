@@ -11,6 +11,9 @@ use serde_bytes::ByteBuf;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
+use std::collections::hash_map::Entry;
+use std::fmt::Debug;
+use sha2::{Digest, Sha256};
 
 thread_local! {
     static STATE: State = State::default();
@@ -18,6 +21,7 @@ thread_local! {
 
 const MAX_DESCRIPTION_LENGTH: usize = 200;
 const MAX_SEARCH_RESULTS: usize = 20;
+
 
 #[derive(Default)]
 struct State {
@@ -40,16 +44,35 @@ fn to_result(r: &Record) -> RecordResult {
     }
 }
 
+fn sha256(data: &ByteBuf) -> Hash {
+    let mut h = Sha256::default();
+    h.update(&data);
+    let result = h.finalize();
+    format!("{:x}", result)
+}
+
 #[update]
-fn notarize(_data: ByteBuf) -> RecordResult {
-    // TODO actually store the object.
-    let now = time() as u64;
-    RecordResult {
-        hash: "".to_string(),
-        owner: RefCell::new(Some(caller())),
-        description: "".to_string(),
-        created: now,
-    }
+fn notarize(data: ByteBuf, description: String) -> Option<RecordResult> {
+    let hash = sha256(&data);
+
+    STATE.with(move |s| {
+        match s.data.borrow_mut().entry(hash.clone()) {
+            Entry::Occupied(_e) => None,
+            Entry::Vacant(e) => {
+                let now = time() as u64;
+                let record = Record {
+                    hash: hash,
+                    owner: Some(caller()),
+                    datum: Some(data),
+                    description: description,
+                    created: now
+                };
+                let result = to_result(&record);
+                e.insert(record);
+                Some(result)
+            }
+        }
+    })
 }
 
 #[query]
