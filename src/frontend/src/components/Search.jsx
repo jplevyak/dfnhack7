@@ -3,15 +3,24 @@ import { useActor } from "./ActorProvider";
 import { SearchResult, SearchResults } from "./SearchResults";
 import { Form, Button, Box, Columns, Block } from "react-bulma-components";
 
-export const Search = ({ onSubmit }) => {
+export const Search = ({ onSubmit, principalId }) => {
   const [term, setTerm] = useState("");
   const [results, setResults] = useState(null);
+  const [revealing, setRevealing] = useState(false);
   const { actor } = useActor();
 
   const search = async (term) => {
     let results = await actor.search(term);
     setResults(results);
-    console.log(results);
+  };
+
+  const makePublic = async (result) => {
+    if (window.confirm("Make public?")) {
+      setRevealing(result.hash);
+      await actor.reveal(result.hash);
+      await search(term);
+      setRevealing(false);
+    }
   };
 
   return (
@@ -22,7 +31,10 @@ export const Search = ({ onSubmit }) => {
             <Form.Input
               placeholder="Search in description, hash, principals..."
               value={term}
-              onChange={(e) => { setTerm(e.target.value); search(e.target.value); }}
+              onChange={(e) => {
+                setTerm(e.target.value);
+                search(e.target.value);
+              }}
             />
           </Form.Control>
           <Form.Control>
@@ -38,7 +50,13 @@ export const Search = ({ onSubmit }) => {
               {results.length} result(s)
             </Block>
             {results.map((result, index) => (
-              <SearchResult result={result} key={index}></SearchResult>
+              <SearchResult
+                result={result}
+                key={index}
+                makePublic={makePublic}
+                revealing={revealing === result.hash}
+                principalId={principalId}
+              ></SearchResult>
             ))}
           </>
         )}
