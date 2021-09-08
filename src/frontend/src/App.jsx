@@ -89,7 +89,13 @@ const App = () => {
           Notarized Data on the Internet Computer
         </Heading>
         {!loggedIn && <LoginNotice onLogin={onLogin} />}
-        <Search></Search>
+        <Search
+          principalId={
+            loggedIn
+              ? authClientRef.current.getIdentity().getPrincipal().toString()
+              : null
+          }
+        ></Search>
 
         {loggedIn && (
           <Upload

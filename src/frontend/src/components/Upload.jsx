@@ -41,7 +41,8 @@ export const Upload = ({ principal }) => {
                 content: Array.from(new Uint8Array(await file.arrayBuffer())),
                 content_type: file.type,
               },
-              note
+              note,
+              isPrivate
             );
 
             if (result.length === 0) {
@@ -57,16 +58,10 @@ export const Upload = ({ principal }) => {
           break;
         case "hash":
           {
-            const result = await actor.notarize(
-              {
-                content: Array.from(new Uint8Array(await file.arrayBuffer())),
-                content_type: file.type,
-              },
-              note
-            );
+            const result = await actor.notarize_hash(hash, note, isPrivate);
 
             if (result.length === 0) {
-              setError("This file was already notarized");
+              setError("This hash was already added");
             } else {
               setSuccess(true);
             }
@@ -176,7 +171,7 @@ export const Upload = ({ principal }) => {
               <Form.Field>
                 <Form.Control>
                   <Form.Textarea
-                    defaultValue={note}
+                    value={note}
                     disabled={uploading}
                     onChange={(e) => setNote(e.target.value)}
                     required

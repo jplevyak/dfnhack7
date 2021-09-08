@@ -8,9 +8,18 @@ const FieldLabel = ({ children }) => {
   );
 };
 
-export const SearchResult = ({ result }) => {
+export const SearchResult = ({
+  result,
+  makePublic,
+  revealing,
+  principalId,
+}) => {
   let url = null;
-  if (result.has_datum && !result.hidden) {
+
+  if (
+    result.has_datum &&
+    (!result.hidden || result.owner.toString() === principalId)
+  ) {
     url = "https://" + canisterId + ".ic0.app";
     if (process.env.NODE_ENV !== "production") {
       url = "http://" + canisterId + ".localhost:8000";
@@ -19,9 +28,13 @@ export const SearchResult = ({ result }) => {
   }
   let result_link;
   if (url) {
-    result_link = <a href={url}>{result.hash}</a>;
+    result_link = (
+      <a href={url} target="_blank">
+        {result.hash}
+      </a>
+    );
   } else {
-    result_link = result.hash + result.has_datum + result.hidden;
+    result_link = result.hash;
   }
   return (
     <Block
@@ -42,7 +55,7 @@ export const SearchResult = ({ result }) => {
           </div>
           <div>
             <FieldLabel>Content: </FieldLabel>
-            {result_link}
+            {result_link} {!result.has_datum ? "(hash only)" : ""}
           </div>
           <div>
             <FieldLabel>Added by: </FieldLabel>
@@ -50,9 +63,29 @@ export const SearchResult = ({ result }) => {
           </div>
         </div>
       </div>
-      <Button style={{ border: "none" }} onClick={() => makePublic(result)}>
-        <img width="24" height="24" src="/assets/private.svg"></img>
-      </Button>
+      {result.hidden && result.owner.toString() === principalId && (
+        <Button
+          style={{ border: "none" }}
+          onClick={() => makePublic(result)}
+          disabled={revealing}
+        >
+          {revealing ? (
+            <img
+              width="24"
+              height="24"
+              src="/assets/spinner.svg"
+              style={{ animation: "spinner 1000ms infinite linear" }}
+            ></img>
+          ) : (
+            <img width="24" height="24" src="/assets/private.svg"></img>
+          )}
+        </Button>
+      )}
+      {result.hidden && result.owner.toString() !== principalId && (
+        <Block>
+          <img width="24" height="24" src="/assets/private.svg"></img>
+        </Block>
+      )}
     </Block>
   );
 };
