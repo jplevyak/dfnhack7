@@ -4,3 +4,4 @@
 /node_modules
 /dist
 local_canisters.json
+/src/declarations/ic

@@ -38,7 +38,10 @@ const App = () => {
       },
     });
 
-    let x = await actor.notarize(Array.from(new Uint8Array(await file.arrayBuffer())), "test note");
+    let x = await actor.notarize({
+      content: Array.from(new Uint8Array(await file.arrayBuffer())),
+      content_type: file.type
+    }, "test note");
     console.log(x);
   };
 
