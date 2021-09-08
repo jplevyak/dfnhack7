@@ -1,26 +1,16 @@
-# DFINITY hackathon Fall 2021 Team 7
+# DFINITY hackathon Fall 2021 Team 7: Notarization Service
 
-## Local install
+This is a timestamped notarization service that allows users to prove that
+they held a document (or an arbitrary file) at a certain point in time. The user
+can upload the file to our service, and also search and download previously uploaded 
+files.
 
-### Install Internet Identity locally
+## Running locally
 
-1. run `dfx start --background` in the project folder
-1. in a separate directory clone https://github.com/dfinity/internet-identity
-1. cd into the newly cloned internet-identity folder
-1. run `npm install`
-1. run `II_ENV=development dfx deploy --no-wallet --argument '(null)'`
-1. note the `internet_identity` canister ID (eg. rkp4c-7iaaa-aaaaa-aaaca-cai)
+Prerequisites:
 
-### Install the hackathon project
+- The IC SDK (in particular, `dfx` should be working)
+- npm >= 7
+- git
 
-1. switch back to the hackathon project directory
-1. create a file called `local_canisters.json` and add content
-   ```
-   {
-    "II_LOCAL_UI_CANISTER_ID": "<id from above>"
-   }
-   ```
-1. run `npm install`
-1. run `dfx deploy`
-1. run `npm start`
-1. open the local frontend at http://localhost:3000/
+From this directory, run `./run_local.sh`
