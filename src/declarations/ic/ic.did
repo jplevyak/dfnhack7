@@ -39,10 +39,15 @@ type RecordResult = record {
   created: nat64;
 };
 
+type Datum = {
+  content_type: text;
+  datum: blob;
+};
+
 type Record = record {
   link: text;
   owner: opt principal;
-  datum: opt blob;
+  datum: Datum;
   description: text;
   created: nat64;
 };
@@ -59,12 +64,12 @@ service: {
   http_request_stream_callback: (token: opt Token) -> (StreamingCallbackHttpResponse) query;
 
   // STUBS: below this line the methods have stubs.
-  notarize: (principal, blob, text) -> (opt RecordResult);
+  notarize: (datum: Datum, description: text) -> (opt RecordResult);
 
   // DONE: below this line the methods have been implemented/revised.
   authorize: (principal) -> ();
   clear: () -> ();
-  get_datum: (text) -> (opt RecordResult) query;
+  get_datum: (text) -> (opt Datum) query;
   get_data: () -> (vec RecordResult) query;
   search: (text) -> (vec RecordResult) query;
 }

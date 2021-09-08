@@ -2,13 +2,19 @@ use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use serde_bytes::ByteBuf;
 use std::cmp::Eq;
 
-#[derive(Default, Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Record {
     pub hash: Hash,
-    pub owner: Option<Principal>,
-    pub datum: Option<ByteBuf>,
+    pub owner: Principal,
+    pub datum: Datum,
     pub description: String,
     pub created: Timestamp,
+}
+
+#[derive(Default, Clone, Debug, CandidType, Deserialize)]
+pub struct Datum {
+    pub content_type: String,
+    pub content: ByteBuf,
 }
 
 pub type Hash = String;
@@ -18,7 +24,7 @@ pub type SearchTerms = String;
 #[derive(Clone, Debug, PartialEq, Eq, CandidType, Deserialize)]
 pub struct RecordResult {
     pub hash: Hash,
-    pub owner: Option<Principal>,
+    pub owner: Principal,
     pub description: String,
     pub created: Timestamp,
 }
