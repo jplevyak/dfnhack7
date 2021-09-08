@@ -15,7 +15,7 @@
     },
     "ic": {
       "build": "cargo build --target wasm32-unknown-unknown --package dfnhack7 --release",
-      "candid": "src/ic/src/dfnhack7.did",
+      "candid": "src/declarations/ic/ic.did",
       "wasm": "target/wasm32-unknown-unknown/release/dfnhack7.wasm",
       "type": "custom"
     }

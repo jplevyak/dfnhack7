@@ -49,12 +49,17 @@
     </style>
   </head>
   <body>
-    <h1 class="center">Stored Data on the Internet Computer</h1>
+    <h1 class="center">Notarized Data on the Internet Computer</h1>
     <div class="referrer"></div>
     <section class="searchbox">
       <input id="terms" alt="Search Terms" size="50" />
       <button id="search" alt="Search Go">Search</button>
+      <input type="checkbox" id="onlymine" name="onlymine" value="mine">
+      <label for="onlymine">Only my Documents</label>
     </section>
     <section id="results"></section>
+    <label>Upload a Document to be Notarized</label>
+    <input id="doc" type="file" name="doc"><br>
+    <button id="upload" class="btn">Upload</button>
   </body>
 </html>

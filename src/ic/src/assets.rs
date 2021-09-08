@@ -34,9 +34,6 @@ struct State {
     chunks: RefCell<HashMap<ChunkId, Chunk>>,
     next_chunk_id: RefCell<ChunkId>,
 
-    batches: RefCell<HashMap<BatchId, Batch>>,
-    next_batch_id: RefCell<BatchId>,
-
     authorized: RefCell<Vec<Principal>>,
 }
 
@@ -119,29 +116,6 @@ struct SetAssetContentArguments {
 struct UnsetAssetContentArguments {
     key: Key,
     content_encoding: String,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct DeleteAssetArguments {
-    key: Key,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct ClearArguments {}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-enum BatchOperation {
-    CreateAsset(CreateAssetArguments),
-    SetAssetContent(SetAssetContentArguments),
-    UnsetAssetContent(UnsetAssetContentArguments),
-    DeleteAsset(DeleteAssetArguments),
-    Clear(ClearArguments),
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct CommitBatchArguments {
-    batch_id: BatchId,
-    operations: Vec<BatchOperation>,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
@@ -278,100 +252,6 @@ fn store(arg: StoreArg) {
     });
 }
 
-#[update(guard = "is_authorized")]
-fn create_batch() -> CreateBatchResponse {
-    STATE.with(|s| {
-        let batch_id = s.next_batch_id.borrow().clone();
-        *s.next_batch_id.borrow_mut() += 1;
-
-        let now = time() as u64;
-
-        let mut batches = s.batches.borrow_mut();
-        batches.insert(
-            batch_id.clone(),
-            Batch {
-                expires_at: now + BATCH_EXPIRY_NANOS,
-            },
-        );
-        s.chunks.borrow_mut().retain(|_, c| {
-            batches
-                .get(&c.batch_id)
-                .map(|b| b.expires_at > now)
-                .unwrap_or(false)
-        });
-        batches.retain(|_, b| b.expires_at > now);
-
-        CreateBatchResponse { batch_id }
-    })
-}
-
-#[update(guard = "is_authorized")]
-fn create_chunk(arg: CreateChunkArg) -> CreateChunkResponse {
-    STATE.with(|s| {
-        let mut batches = s.batches.borrow_mut();
-        let now = time() as u64;
-        let mut batch = batches
-            .get_mut(&arg.batch_id)
-            .unwrap_or_else(|| trap("batch not found"));
-        batch.expires_at = now + BATCH_EXPIRY_NANOS;
-
-        let chunk_id = s.next_chunk_id.borrow().clone();
-        *s.next_chunk_id.borrow_mut() += 1;
-
-        s.chunks.borrow_mut().insert(
-            chunk_id.clone(),
-            Chunk {
-                batch_id: arg.batch_id,
-                content: RcBytes::from(arg.content),
-            },
-        );
-
-        CreateChunkResponse { chunk_id }
-    })
-}
-
-#[update(guard = "is_authorized")]
-fn create_asset(arg: CreateAssetArguments) {
-    do_create_asset(arg);
-}
-
-#[update(guard = "is_authorized")]
-fn set_asset_content(arg: SetAssetContentArguments) {
-    do_set_asset_content(arg);
-}
-
-#[update(guard = "is_authorized")]
-fn unset_asset_content(arg: UnsetAssetContentArguments) {
-    do_unset_asset_content(arg);
-}
-
-#[update(guard = "is_authorized")]
-fn delete_content(arg: DeleteAssetArguments) {
-    do_delete_asset(arg);
-}
-
-#[update(guard = "is_authorized")]
-fn clear() {
-    do_clear();
-}
-
-#[update(guard = "is_authorized")]
-fn commit_batch(arg: CommitBatchArguments) {
-    let batch_id = arg.batch_id;
-    for op in arg.operations {
-        match op {
-            BatchOperation::CreateAsset(arg) => do_create_asset(arg),
-            BatchOperation::SetAssetContent(arg) => do_set_asset_content(arg),
-            BatchOperation::UnsetAssetContent(arg) => do_unset_asset_content(arg),
-            BatchOperation::DeleteAsset(arg) => do_delete_asset(arg),
-            BatchOperation::Clear(_) => do_clear(),
-        }
-    }
-    STATE.with(|s| {
-        s.batches.borrow_mut().remove(&batch_id);
-    })
-}
-
 #[query]
 fn get(arg: GetArg) -> EncodedAsset {
     STATE.with(|s| {
@@ -421,35 +301,6 @@ fn get_chunk(arg: GetChunkArg) -> GetChunkResponse {
         GetChunkResponse {
             content: enc.content_chunks[index].clone(),
         }
-    })
-}
-
-#[query]
-fn list() -> Vec<AssetDetails> {
-    STATE.with(|s| {
-        s.assets
-            .borrow()
-            .iter()
-            .map(|(key, asset)| {
-                let mut encodings: Vec<_> = asset
-                    .encodings
-                    .iter()
-                    .map(|(enc_name, enc)| AssetEncodingDetails {
-                        modified: enc.modified,
-                        content_encoding: enc_name.clone(),
-                        sha256: Some(ByteBuf::from(enc.sha256)),
-                        length: Nat::from(enc.total_length),
-                    })
-                    .collect();
-                encodings.sort_by(|l, r| l.content_encoding.cmp(&r.content_encoding));
-
-                AssetDetails {
-                    key: key.clone(),
-                    content_type: asset.content_type.clone(),
-                    encodings,
-                }
-            })
-            .collect::<Vec<_>>()
     })
 }
 
@@ -775,20 +626,18 @@ fn do_unset_asset_content(arg: UnsetAssetContentArguments) {
     })
 }
 
-fn do_delete_asset(arg: DeleteAssetArguments) {
+fn do_delete_asset(key: &str) {
     STATE.with(|s| {
         let mut assets = s.assets.borrow_mut();
-        assets.remove(&arg.key);
+        assets.remove(key);
     });
-    delete_asset_hash(&arg.key);
+    delete_asset_hash(key);
 }
 
-fn do_clear() {
+pub fn do_clear() {
     STATE.with(|s| {
         s.assets.borrow_mut().clear();
-        s.batches.borrow_mut().clear();
         s.chunks.borrow_mut().clear();
-        *s.next_batch_id.borrow_mut() = Nat::from(1);
         *s.next_chunk_id.borrow_mut() = Nat::from(1);
     })
 }

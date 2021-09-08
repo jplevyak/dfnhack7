@@ -1,53 +1,25 @@
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use serde_bytes::ByteBuf;
 use std::cell::RefCell;
 use std::cmp::Eq;
-use std::hash::Hash;
 
 #[derive(Default, Clone, Debug, CandidType, Deserialize)]
 pub struct Record {
-    pub canister_id: Option<CanisterId>,
+    pub hash: Hash,
     pub owner: RefCell<Option<Principal>>,
+    pub datum: Option<ByteBuf>,
     pub description: String,
-    pub updated: Timestamp,
-    pub expires: Timestamp,
+    pub created: Timestamp,
 }
 
+pub type Hash = String;
 pub type Timestamp = u64;
-pub type Datum = String;
-pub type CanisterId = String;
 pub type SearchTerms = String;
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, CandidType, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, CandidType, Deserialize)]
 pub struct RecordResult {
-    pub datum: Datum,
-    pub canister_id: Option<CanisterId>,
+    pub hash: Hash,
+    pub owner: RefCell<Option<Principal>>,
     pub description: String,
-    pub expires: Timestamp,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub struct UpdatedRecordResult {
-    pub datum: Datum,
-    pub canister_id: Option<CanisterId>,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub struct RecordReservedResult {
-    pub record: RecordResult,
-    pub owner: Option<Principal>,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub struct ClaimDatumArg {
-    pub datum: Datum,
-    pub canister_id: Option<CanisterId>,
-    pub description: Option<String>,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub struct SetDatumArg {
-    pub datum: Datum,
-    pub canister_id: Option<CanisterId>,
-    pub description: Option<String>,
-    pub expires: Timestamp,
+    pub created: Timestamp,
 }
