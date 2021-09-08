@@ -73,17 +73,17 @@ export const SearchResult = ({
             <img
               width="24"
               height="24"
-              src="/assets/spinner.svg"
+              src="/assets/spinner.png"
               style={{ animation: "spinner 1000ms infinite linear" }}
             ></img>
           ) : (
-            <img width="24" height="24" src="/assets/private.svg"></img>
+            <img width="24" height="24" src="/assets/private.png"></img>
           )}
         </Button>
       )}
       {result.hidden && result.owner.toString() !== principalId && (
         <Block>
-          <img width="24" height="24" src="/assets/private.svg"></img>
+          <img width="24" height="24" src="/assets/private.png"></img>
         </Block>
       )}
     </Block>

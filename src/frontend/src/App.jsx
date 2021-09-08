@@ -65,7 +65,7 @@ const App = () => {
               alignItems: "center",
             }}
           >
-            <img src={"/assets/logo.svg"} width="40" height="40" /> IC Notary
+            <img src={"/assets/logo.png"} width="40" height="40" /> IC Notary
           </Navbar.Brand>
           <Navbar.Menu mr="0">
             <Navbar.Container></Navbar.Container>
