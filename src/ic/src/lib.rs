@@ -76,9 +76,9 @@ fn notarize(datum: Datum, description: String) -> Option<RecordResult> {
 }
 
 #[query]
-fn get_datum(hash: Hash) -> Option<RecordResult> {
+fn get_datum(hash: Hash) -> Option<Datum> {
     STATE.with(|s| match s.data.borrow().get(&hash) {
-        Some(r) => Some(to_result(&r)),
+        Some(r) => Some(r.datum.clone()),
         None => None,
     })
 }
