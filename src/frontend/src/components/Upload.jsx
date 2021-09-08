@@ -35,7 +35,8 @@ export const Upload = ({ principal }) => {
           content: Array.from(new Uint8Array(await file.arrayBuffer())),
           content_type: file.type,
         },
-        note
+        note,
+        false
       );
 
       if (result.length === 0) {
@@ -54,7 +55,7 @@ export const Upload = ({ principal }) => {
 
   return (
     <Box style={{ width: 700, margin: "auto" }} mt="6">
-      <Heading size="4">Upload a file to notarize</Heading>
+      <Heading size="4">Notarize a file</Heading>
       <Block p="1" textColor="gray" style={{ fontSize: 12 }}>
         Your principal ID: {principal}
       </Block>
@@ -63,8 +64,8 @@ export const Upload = ({ principal }) => {
           <Menu>
             <Menu.List>
               <Menu.List.Item active>By file upload</Menu.List.Item>
-              <Menu.List.Item>By custom hash</Menu.List.Item>
               <Menu.List.Item>By canister fetch</Menu.List.Item>
+              <Menu.List.Item>By content hash</Menu.List.Item>
             </Menu.List>
           </Menu>
         </Columns.Column>

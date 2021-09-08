@@ -9,11 +9,20 @@ const FieldLabel = ({ children }) => {
 };
 
 export const SearchResult = ({ result }) => {
-  let url ="https://" + canisterId + ".ic0.app"; 
-  if (process.env.NODE_ENV !== "production") {
-    url = "http://" + canisterId + ".localhost:8000"
+  let url = null;
+  if (result.has_datum && !result.hidden) {
+    url ="https://" + canisterId + ".ic0.app"; 
+    if (process.env.NODE_ENV !== "production") {
+      url = "http://" + canisterId + ".localhost:8000"
+    }
+    url += "/" + result.hash;
   }
-  url += "/" + result.hash;
+  let result_link;
+  if (url) {
+    result_link = <a href={url}>{result.hash}</a>
+  } else {
+    result_link = result.hash + result.has_datum + result.hidden
+  }
   return (
     <Block
       style={{ borderBottom: "1px solid #aaa", display: "flex" }}
@@ -33,7 +42,7 @@ export const SearchResult = ({ result }) => {
           </div>
           <div>
             <FieldLabel>Content: </FieldLabel>
-            <a href={url}>{result.hash}</a>
+            {result_link}
           </div>
           <div>
             <FieldLabel>Added by: </FieldLabel>
