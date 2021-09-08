@@ -50,7 +50,7 @@ service: {
   http_request: (request: HttpRequest) -> (HttpResponse) query;
   http_request_stream_callback: (token: opt Token) -> (StreamingCallbackHttpResponse) query;
   notarize: (datum: Datum, description: text, hidden: bool) -> (opt RecordResult);
-  notarize_hash: (hex_sha256: text, description: text, hidden: bool) -> (opt RecordResult);
+  notarize_hash: (hex_sha256: text, description: text) -> (opt RecordResult);
   reveal: (hex_sha256: text) -> (opt RecordResult);
   search: (text) -> (vec RecordResult) query;
   authorize: (principal) -> ();

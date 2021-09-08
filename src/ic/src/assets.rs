@@ -1,7 +1,7 @@
 use crate::rc_bytes::RcBytes;
 use ic_cdk::api::{caller, data_certificate, set_certified_data, time, trap};
 use ic_cdk::export::candid::{CandidType, Deserialize, Func, Nat, Principal};
-use ic_cdk_macros::{query, update};
+use ic_cdk_macros::update;
 use ic_certified_map::{AsHashTree, Hash, HashTree, RbTree};
 use num_traits::ToPrimitive;
 use serde::Serialize;
@@ -81,15 +81,15 @@ pub type Key = String;
 type HeaderField = (String, String);
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
-struct HttpRequest {
+pub struct HttpRequest {
     method: String,
-    url: String,
-    headers: Vec<(String, String)>,
+    pub url: String,
+    pub headers: Vec<(String, String)>,
     body: ByteBuf,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
-struct HttpResponse {
+pub struct HttpResponse {
     status_code: u16,
     headers: Vec<HeaderField>,
     body: RcBytes,
@@ -97,8 +97,8 @@ struct HttpResponse {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
-struct Token {
-    key: String,
+pub struct Token {
+    pub key: String,
     content_encoding: String,
     index: Nat,
     // We don't care about the sha, we just want to be backward compatible.
@@ -111,7 +111,7 @@ enum StreamingStrategy {
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
-struct StreamingCallbackHttpResponse {
+pub struct StreamingCallbackHttpResponse {
     body: RcBytes,
     token: Option<Token>,
 }
@@ -228,7 +228,7 @@ fn build_404(certificate_header: HeaderField) -> HttpResponse {
     }
 }
 
-fn build_http_response(path: &str, encodings: Vec<String>, index: usize) -> HttpResponse {
+pub fn build_http_response(path: &str, encodings: Vec<String>, index: usize) -> HttpResponse {
     STATE.with(|s| {
         let assets = s.assets.borrow();
 
@@ -339,7 +339,7 @@ impl<'a> Iterator for UrlDecode<'a> {
     }
 }
 
-fn url_decode(url: &str) -> String {
+pub fn url_decode(url: &str) -> String {
     UrlDecode {
         bytes: url.as_bytes().into_iter(),
     }
@@ -356,28 +356,7 @@ fn check_url_decode() {
     assert_eq!(url_decode("/%e6"), "/æ");
 }
 
-#[query]
-fn http_request(req: HttpRequest) -> HttpResponse {
-    let mut encodings = vec![];
-    for (name, value) in req.headers.iter() {
-        if name.eq_ignore_ascii_case("Accept-Encoding") {
-            for v in value.split(',') {
-                encodings.push(v.trim().to_string());
-            }
-        }
-    }
-    encodings.push("identity".to_string());
-
-    let path = match req.url.find('?') {
-        Some(i) => &req.url[..i],
-        None => &req.url[..],
-    };
-
-    build_http_response(&url_decode(&path), encodings, 0)
-}
-
-#[query]
-fn http_request_streaming_callback(
+pub fn http_request_streaming_callback(
     Token {
         key,
         content_encoding,

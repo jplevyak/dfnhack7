@@ -43,6 +43,47 @@ fn to_result(r: &Record) -> RecordResult {
     }
 }
 
+#[query]
+fn http_request(req: crate::assets::HttpRequest) -> crate::assets::HttpResponse {
+    let mut encodings = vec![];
+    for (name, value) in req.headers.iter() {
+        if name.eq_ignore_ascii_case("Accept-Encoding") {
+            for v in value.split(',') {
+                encodings.push(v.trim().to_string());
+            }
+        }
+    }
+    encodings.push("identity".to_string());
+
+    let path = match req.url.find('?') {
+        Some(i) => &req.url[..i],
+        None => &req.url[..],
+    };
+    let key = &path[1..];
+    STATE.with(move |s| match s.data.borrow_mut().entry(key.to_string()) {
+        Entry::Occupied(e) => {
+            assert!(!e.get().hidden);
+        }
+        Entry::Vacant(_e) => {}
+    });
+
+    crate::assets::build_http_response(&crate::assets::url_decode(&path), encodings, 0)
+}
+
+#[query]
+fn http_request_streaming_callback(
+    token: crate::assets::Token,
+) -> crate::assets::StreamingCallbackHttpResponse {
+    let key = token.key.clone();
+    STATE.with(move |s| match s.data.borrow_mut().entry(key) {
+        Entry::Occupied(e) => {
+            assert!(!e.get().hidden);
+        }
+        Entry::Vacant(_e) => {}
+    });
+    crate::assets::http_request_streaming_callback(token)
+}
+
 #[update]
 fn notarize(datum: Datum, description: String, hidden: bool) -> Option<RecordResult> {
     assert!(description.len() <= MAX_DESCRIPTION_LENGTH);
@@ -74,7 +115,7 @@ fn notarize(datum: Datum, description: String, hidden: bool) -> Option<RecordRes
 }
 
 #[update]
-fn notarize_hash(hex_sha256: String, description: String, hidden: bool) -> Option<RecordResult> {
+fn notarize_hash(hex_sha256: String, description: String) -> Option<RecordResult> {
     assert!(description.len() <= MAX_DESCRIPTION_LENGTH);
     let _hash = hex::decode(hex_sha256.clone()).unwrap();
     assert!(_hash.len() == 32);
@@ -88,7 +129,7 @@ fn notarize_hash(hex_sha256: String, description: String, hidden: bool) -> Optio
                     owner: caller(),
                     datum: None,
                     description: description,
-                    hidden,
+                    hidden: true,
                     created,
                 };
                 let result = to_result(&record);
