@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { ic } from "../../declarations/ic";
+import { ic, createActor, _SERVICE, canisterId } from "../../declarations/ic";
 import { AuthClient } from "@dfinity/auth-client";
 import { Search } from "./components/Search";
 import { Upload } from "./components/Upload";
@@ -30,6 +30,22 @@ const App = () => {
     });
   };
 
+  const onUpload = async (file) => {
+    console.log(file);
+    const actor = createActor(canisterId, {
+      agentOptions: {
+        identity: authClientRef.current.getIdentity(),
+      },
+    });
+
+    let x = await actor.notarize(Array.from(new Uint8Array(await file.arrayBuffer())), "test note");
+    console.log(x);
+  };
+
+  // const search = () => {
+
+  // }
+
   return (
     <div>
       <h1>Notarized Data on the Internet Computer</h1>
@@ -39,10 +55,10 @@ const App = () => {
           {authClientRef.current.getIdentity().getPrincipal().toString()}
         </p>
       )}
-      <Search></Search>
+      <Search onSubmit={}></Search>
       {loggedIn ? (
         <>
-          <Upload></Upload>
+          <Upload onUpload={onUpload}></Upload>
           <button
             onClick={() => {
               authClientRef.current.logout();

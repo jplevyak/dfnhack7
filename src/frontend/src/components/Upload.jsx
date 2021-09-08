@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 
 export const Upload = ({ principalId, onUpload, uploading, error }) => {
+  let [file, setFile] = useState(null);
   function onFilesChanged(e) {
     console.log(e);
+    setFile(e.target.files[0]);
   }
 
   async function upload(e) {
     e.preventDefault();
 
-    onUpload(e);
+    onUpload(file);
   }
 
   return (
