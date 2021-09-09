@@ -92,9 +92,10 @@ module.exports = {
       ],
     }),
     new webpack.EnvironmentPlugin({
-      NODE_ENV: "development",
+      NODE_ENV: "production",
       IC_CANISTER_ID: canisters["ic"],
-      II_LOCAL_URL: `http://${II_LOCAL_UI_CANISTER_ID}.localhost:8000/#authorize`,
+      DFX_NETWORK: "ic",
+      // II_LOCAL_URL: `http://${II_LOCAL_UI_CANISTER_ID}.localhost:8000/#authorize`,
     }),
     new webpack.ProvidePlugin({
       Buffer: [require.resolve("buffer/"), "Buffer"],
