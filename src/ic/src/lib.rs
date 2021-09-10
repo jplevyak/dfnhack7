@@ -129,7 +129,7 @@ fn notarize_hash(hex_sha256: String, description: String) -> Option<RecordResult
                     owner: caller(),
                     datum: None,
                     description: description,
-                    hidden: true,
+                    hidden: false,
                     created,
                 };
                 let result = to_result(&record);
