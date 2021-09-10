@@ -127,6 +127,7 @@ fn authorize(other: Principal) {
     })
 }
 
+/*
 pub fn do_get(key: Key) -> RcBytes {
     STATE.with(|s| {
         let assets = s.assets.borrow();
@@ -141,6 +142,7 @@ pub fn do_get(key: Key) -> RcBytes {
         id_enc.content_chunks[0].clone()
     })
 }
+*/
 
 pub fn do_put(key: Key, hash: Hash, content_type: String, content: ByteBuf) {
     let content_encoding = "identity".to_string();
@@ -383,6 +385,7 @@ pub fn http_request_streaming_callback(
     })
 }
 
+/*
 pub fn do_delete(key: &str) {
     STATE.with(|s| {
         let mut assets = s.assets.borrow_mut();
@@ -390,6 +393,7 @@ pub fn do_delete(key: &str) {
     });
     delete_asset_hash(key);
 }
+*/
 
 pub fn do_clear() {
     STATE.with(|s| {

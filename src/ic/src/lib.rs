@@ -62,7 +62,10 @@ fn http_request(req: crate::assets::HttpRequest) -> crate::assets::HttpResponse 
     let key = &path[1..];
     STATE.with(move |s| match s.data.borrow_mut().entry(key.to_string()) {
         Entry::Occupied(e) => {
-            assert!(!e.get().hidden);
+            // NOTE: the caller() is not the same as that for the asset
+            // canister because of limitations of II.  We can also
+            // fix this by merging the two canisters.
+            assert!(!e.get().hidden || caller() == e.get().owner);
         }
         Entry::Vacant(_e) => {}
     });
@@ -77,7 +80,8 @@ fn http_request_streaming_callback(
     let key = token.key.clone();
     STATE.with(move |s| match s.data.borrow_mut().entry(key) {
         Entry::Occupied(e) => {
-            assert!(!e.get().hidden);
+            // NOTE: the caller() is not the same because of limitations of II.
+            assert!(!e.get().hidden || caller() == e.get().owner);
         }
         Entry::Vacant(_e) => {}
     });
@@ -155,7 +159,7 @@ fn reveal(hex_sha256: String) -> Option<RecordResult> {
     )
 }
 
-#[query]
+#[query(guard = "is_authorized")]
 fn get_datum(hash: Hash) -> Option<Datum> {
     STATE.with(|s| match s.data.borrow().get(&hash) {
         Some(r) => r.datum.clone(),
@@ -163,7 +167,7 @@ fn get_datum(hash: Hash) -> Option<Datum> {
     })
 }
 
-#[query]
+#[query(guard = "is_authorized")]
 fn get_data() -> Vec<RecordResult> {
     STATE.with(|s| {
         s.data
